@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { Loader2 } from "lucide-react";
 
 const NoProductAvailable = ({
   selectedTab,
@@ -24,7 +23,7 @@ const NoProductAvailable = ({
         transition={{ duration: 0.5 }}
       >
         <h2 className="text-2xl font-bold text-gray-800">
-          No Product Available
+          No matching products
         </h2>
       </motion.div>
 
@@ -34,21 +33,12 @@ const NoProductAvailable = ({
         transition={{ delay: 0.2, duration: 0.5 }}
         className="text-gray-600"
       >
-        We&apos;re sorry, but there are no products matching on{" "}
+        No products match your selection{" "}
         <span className="text-base font-semibold text-darkColor">
           {selectedTab}
         </span>{" "}
-        criteria at the moment.
+        at the moment.
       </motion.p>
-
-      <motion.div
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ repeat: Infinity, duration: 1.5 }}
-        className="flex items-center space-x-2 text-shop_dark_green"
-      >
-        <Loader2 className="w-5 h-5 animate-spin" />
-        <span>We&apos;re restocking shortly</span>
-      </motion.div>
 
       <motion.p
         initial={{ opacity: 0 }}
@@ -56,7 +46,7 @@ const NoProductAvailable = ({
         transition={{ delay: 0.4, duration: 0.5 }}
         className="text-sm text-gray-500"
       >
-        Please check back later or explore our other product categories.
+        Try another category or clear your search and filters.
       </motion.p>
     </div>
   );

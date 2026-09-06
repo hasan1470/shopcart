@@ -3,29 +3,29 @@ import Link from "next/link";
 import { getAllBrands } from "@/sanity/queries";
 import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
-import { GitCompareArrows, Headset, ShieldCheck, Truck } from "lucide-react";
+import { Heart, Package, ShieldCheck, Truck } from "lucide-react";
 import { Title } from "./Title";
 
 
 const extraData = [
   {
-    title: "Free Delivery",
-    description: "Free shipping over $100",
+    title: "Delivery Options",
+    description: "Compare standard and express at checkout",
     icon: <Truck size={45} />,
   },
   {
-    title: "Free Return",
-    description: "Free shipping over $100",
-    icon: <GitCompareArrows size={45} />,
+    title: "Saved Favorites",
+    description: "Keep your shortlist in one place",
+    icon: <Heart size={45} />,
   },
   {
-    title: "Customer Support",
-    description: "Friendly 27/7 customer support",
-    icon: <Headset size={45} />,
+    title: "Order Management",
+    description: "Review your orders and their status",
+    icon: <Package size={45} />,
   },
   {
-    title: "Money Back guarantee",
-    description: "Quality checked by our team",
+    title: "Clear Totals",
+    description: "Review items and delivery before placing an order",
     icon: <ShieldCheck size={45} />,
   },
 ];

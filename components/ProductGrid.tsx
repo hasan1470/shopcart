@@ -13,7 +13,7 @@ import ProductCard from "./ProductCard";
 
 const ProductGrid = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState(productType[0]?.title || "");
 
   useEffect(() => {
