@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+export const metadata = { icons: { icon: "/favicon.svg", apple: "/apple-touch-icon.png" } };
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
