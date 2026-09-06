@@ -29,8 +29,8 @@ export default function EmptyCart() {
           <Image
             src={emptyCart}
             alt="Empty shopping cart"
-            layout="fill"
-            objectFit="contain"
+            fill
+            style={{objectFit:"contain"}}
             className="drop-shadow-lg"
           />
           <motion.div

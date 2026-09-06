@@ -1,81 +1,50 @@
 "use server";
 
+import { DEMO_MODE } from "@/lib/demo-mode";
 import stripe from "@/lib/stripe";
-import { Address } from "@/sanity.types";
+import { currentUser } from "@clerk/nextjs/server";
+import { backendClient } from "@/sanity/lib/backendClient";
 import { urlFor } from "@/sanity/lib/image";
-import { CartItem } from "@/store";
-import Stripe from "stripe";
+import type { Product } from "@/sanity.types";
+import type { CartItem } from "@/store";
+import { validateCart } from "@/lib/checkout-validation";
 
-export interface Metadata {
-  orderNumber: string;
-  customerName: string;
-  customerEmail: string;
-  clerkUserId?: string;
-  address?: Address | null;
-}
+export interface GroupedCartItems { product: CartItem["product"]; quantity: number }
 
-export interface GroupedCartItems {
-  product: CartItem["product"];
-  quantity: number;
-}
-
-export async function createCheckoutSession(
-  items: GroupedCartItems[],
-  metadata: Metadata
-) {
-  try {
-    // Retrieve existing customer or create a new one
-    const customers = await stripe.customers.list({
-      email: metadata.customerEmail,
-      limit: 1,
-    });
-    const customerId = customers?.data?.length > 0 ? customers.data[0].id : "";
-
-    const sessionPayload: Stripe.Checkout.SessionCreateParams = {
-      metadata: {
-        orderNumber: metadata.orderNumber,
-        customerName: metadata.customerName,
-        customerEmail: metadata.customerEmail,
-        clerkUserId: metadata.clerkUserId!,
-        address: JSON.stringify(metadata.address),
-      },
-      mode: "payment",
-      allow_promotion_codes: true,
-      payment_method_types: ["card"],
-      invoice_creation: {
-        enabled: true,
-      },
-      success_url: `${
-        process.env.NEXT_PUBLIC_BASE_URL
-      }/success?session_id={CHECKOUT_SESSION_ID}&orderNumber=${metadata.orderNumber}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
-      line_items: items?.map((item) => ({
-        price_data: {
-          currency: "USD",
-          unit_amount: Math.round(item?.product?.price! * 100),
-          product_data: {
-            name: item?.product?.name || "Unknown Product",
-            description: item?.product?.description,
-            metadata: { id: item?.product?._id },
-            images:
-              item?.product?.images && item?.product?.images?.length > 0
-                ? [urlFor(item?.product?.images[0]).url()]
-                : undefined,
-          },
-        },
-        quantity: item?.quantity,
-      })),
-    };
-    if (customerId) {
-      sessionPayload.customer = customerId;
-    } else {
-      sessionPayload.customer_email = metadata.customerEmail;
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionPayload);
-    return session.url;
-  } catch (error) {
-    console.error("Error creating Checkout Session", error);
-    throw error;
-  }
+export async function createCheckoutSession(items: GroupedCartItems[]) {
+  if (DEMO_MODE) throw new Error("Use demo checkout from the cart.");
+  const user = await currentUser();
+  if (!user) throw new Error("Sign in before checking out.");
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error("Checkout is not configured.");
+  const email = user.primaryEmailAddress?.emailAddress;
+  if (!email) throw new Error("Add a verified email address to your account first.");
+  if (!Array.isArray(items) || items.length < 1 || items.length > 50) throw new Error("Your cart must contain between 1 and 50 products.");
+  const ids = items.map(item => item?.product?._id).filter(id => typeof id === "string");
+  const products = await backendClient.fetch<Product[]>('*[_type == "product" && _id in $ids]', { ids });
+  const validated = validateCart(items, products);
+  const origin = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+  const orderNumber = crypto.randomUUID();
+  const customers = await stripe.customers.list({ email, limit: 10 });
+  const customer = customers.data.find(customer => customer.metadata.clerkUserId === user.id);
+  const customerId = customer?.id ?? (await stripe.customers.create({ email, name: user.fullName || undefined, metadata: { clerkUserId: user.id } })).id;
+  const session = await stripe.checkout.sessions.create({
+    customer: customerId,
+    client_reference_id: user.id,
+    metadata: { orderNumber, clerkUserId: user.id },
+    mode: "payment",
+    payment_method_types: ["card"],
+    billing_address_collection: "required",
+    shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU", "BD", "IN"] },
+    invoice_creation: { enabled: true },
+    success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/cart`,
+    line_items: validated.map(({ product, quantity, unitAmount }) => {
+      const fullProduct = products.find(item => item._id === product._id)!;
+      return { quantity, price_data: { currency: "usd", unit_amount: unitAmount, product_data: {
+        name: product.name || "Product", metadata: { id: product._id },
+        images: fullProduct.images?.length ? [urlFor(fullProduct.images[0]).url()] : undefined,
+      } } };
+    }),
+  });
+  return session.url;
 }

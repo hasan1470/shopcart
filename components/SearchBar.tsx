@@ -1,12 +1,3 @@
-import { Search } from 'lucide-react'
-import React from 'react'
-
-const SearchBar = () => {
-  return (
-    <div>
-        <Search className='w-5 h-5 hoverEffect hover:text-shop-light-green'/>
-    </div>
-  )
-}
-
-export default SearchBar
+import { Search } from "lucide-react";
+import Link from "next/link";
+export default function SearchBar() { return <Link href="/shop#catalog-search" aria-label="Search products"><Search className="w-5 h-5 hover:text-shop-light-green"/></Link>; }

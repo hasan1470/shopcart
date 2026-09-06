@@ -36,6 +36,7 @@ const QuantityButtons = ({ product, className }: Props) => {
   return (
     <div className={cn("flex items-center gap-1 pb-1 text-base", className)}>
       <Button
+        aria-label="Decrease quantity"
         onClick={handleRemoveProduct}
         variant="outline"
         size="icon"
@@ -48,10 +49,11 @@ const QuantityButtons = ({ product, className }: Props) => {
         {itemCount}
       </span>
       <Button
+        aria-label="Increase quantity"
         onClick={handleAddToCart}
         variant="outline"
         size="icon"
-        disabled={isOutOfStock}
+        disabled={isOutOfStock || itemCount >= (product.stock ?? 0)}
         className="w-6 h-6 border-[1px] hover:bg-shop-dark-green/20 hoverEffect"
       >
         <Plus />

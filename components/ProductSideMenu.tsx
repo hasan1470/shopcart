@@ -21,7 +21,7 @@ const ProductSideMenu = ({
     );
     setExistingProduct(availableProduct || null);
   }, [product, favoriteProduct]);
-  const handleFavorite = (e: React.MouseEvent<HTMLSpanElement>) => {
+  const handleFavorite = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (product?._id) {
       addToFavorite(product).then(() => {
@@ -37,12 +37,15 @@ const ProductSideMenu = ({
     <div
       className={cn("absolute top-2 right-2 hover:cursor-pointer", className)}
     >
-      <div
+      <button
+        type="button"
+        aria-label={existingProduct ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+        aria-pressed={Boolean(existingProduct)}
         onClick={handleFavorite}
         className={`p-2.5 rounded-full hover:bg-shop-dark-green/80 hover:text-white hoverEffect  ${existingProduct ? "bg-shop-dark-green/80 text-white" : "bg-lightColor/10"}`}
       >
         <Heart size={15} />
-      </div>
+      </button>
     </div>
   );
 };

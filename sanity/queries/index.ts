@@ -1,3 +1,5 @@
+import type { Product } from "@/sanity.types";
+import { client } from "../lib/client";
 import { sanityFetch } from "../lib/live";
 import {
   BLOG_CATEGORIES,
@@ -55,8 +57,7 @@ const getLatestBlogs = async () => {
 };
 const getDealProducts = async () => {
   try {
-    const { data } = await sanityFetch({ query: DEAL_PRODUCTS });
-    return data ?? [];
+    return await client.fetch<Product[]>(DEAL_PRODUCTS);
   } catch (error) {
     console.log("Error fetching deal Products:", error);
     return [];
@@ -121,10 +122,10 @@ const getSingleBlog = async (slug: string) => {
       query: SINGLE_BLOG_QUERY,
       params: { slug },
     });
-    return data ?? [];
+    return data ?? null;
   } catch (error) {
     console.log("Error fetching all brands:", error);
-    return [];
+    return null;
   }
 };
 const getBlogCategories = async () => {

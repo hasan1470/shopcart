@@ -3,7 +3,6 @@ import { urlFor } from "@/sanity/lib/image";
 import Image from "next/image";
 import React from "react";
 import Link from "next/link";
-import { StarIcon } from "@sanity/icons";
 import { Flame } from "lucide-react";
 import ProductSideMenu from "./ProductSideMenu";
 import AddToCartButton from "./AddToCartButton";
@@ -18,10 +17,9 @@ const ProductCard = ({ product }: { product: Product }) => {
           <Link href={`/product/${product?.slug?.current}`}>
             <Image
               src={urlFor(product.images[0]).url()}
-              alt="productImage"
+              alt={product.name || "Product"}
               width={500}
               height={500}
-              priority
               className={`w-full h-64 object-contain overflow-hidden transition-transform bg-shop-light-bg duration-500 
               ${product?.stock !== 0 ? "group-hover:scale-105" : "opacity-50"}`}
             />
@@ -46,27 +44,8 @@ const ProductCard = ({ product }: { product: Product }) => {
         )}
       </div>
       <div className="p-3 flex flex-col gap-2">
-        {product?.categories && (
-          <p className="uppercase line-clamp-1 text-xs font-medium text-lightColor">
-            {product.categories.map((cat) => cat).join(", ")}
-          </p>
-        )}
+        <p className="text-xs uppercase text-lightColor">{product.variant || "Collection"}</p>
         <Title className="text-sm line-clamp-1">{product?.name}</Title>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, index) => (
-              <StarIcon
-                key={index}
-                className={
-                  index < 4 ? "text-shop-light-green" : " text-lightColor"
-                }
-                fill={index < 4 ? "#93D991" : "#ababab"}
-              />
-            ))}
-          </div>
-          <p className="text-lightColor text-xs tracking-wide">5 Reviews</p>
-        </div>
-
         <div className="flex items-center gap-2.5">
           <p className="font-medium">In Stock</p>
           <p

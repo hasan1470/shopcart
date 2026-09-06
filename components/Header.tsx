@@ -7,20 +7,15 @@ import CartIcon from './CartIcon'
 import FavoriteButton from './FavoriteButton'
 import Signin from './Signin'
 import MobileMenu from './MobileMenu'
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { currentUser } from '@clerk/nextjs/server'
 import { ClerkLoaded, SignedIn, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { Logs } from 'lucide-react'
-import { getMyOrders } from '@/sanity/queries'
+import { DEMO_MODE } from '@/lib/demo-mode'
 
 
 const Header = async () => {
-  const user = await currentUser()
-  const { userId } = await auth();
-  let orders = null;
-  if (userId) {
-    orders = await getMyOrders(userId);
-  }
+  const user = DEMO_MODE ? null : await currentUser();
 
   return (
     <header className='sticky top-0 z-50 py-5 bg-white/70 backdrop-blur-md'>
@@ -40,23 +35,21 @@ const Header = async () => {
               <CartIcon />
               <FavoriteButton />
 
-              {user && (
+              {(DEMO_MODE || user) && (
               <Link
                 href={"/orders"}
                 className="group relative hover:text-shop-light-green hoverEffect"
               >
-                <Logs />
-                <span className="absolute -top-1 -right-1 bg-shop-btn-dark-green text-white h-3.5 w-3.5 rounded-full text-xs font-semibold flex items-center justify-center">
-                  {orders?.length ? orders?.length : 0}
-                </span>
+                <Logs aria-label="Orders"/>
+
               </Link>
             )}
-              <ClerkLoaded>
+              {!DEMO_MODE && <ClerkLoaded>
                 <SignedIn>
                   <UserButton />
                 </SignedIn>
                 {!user && <Signin />}
-              </ClerkLoaded>
+              </ClerkLoaded>}
               
             </div>
         </Container>

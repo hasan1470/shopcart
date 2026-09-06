@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { makeDemoOrder, type DemoOrder } from "./lib/demo-orders";
+import { validateCart } from "./lib/checkout-validation";
 import { Product } from "./sanity.types";
 
 export interface CartItem {
@@ -9,6 +11,9 @@ export interface CartItem {
 
 interface StoreState {
   items: CartItem[];
+  demoOrders: DemoOrder[];
+  placeDemoOrder: (delivery: DemoOrder["delivery"]) => DemoOrder;
+  cancelDemoOrder: (id: string) => void;
   addItem: (product: Product) => void;
   removeItem: (productId: string) => void;
   deleteCartProduct: (productId: string) => void;
@@ -28,6 +33,15 @@ const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
       items: [],
+      demoOrders: [],
+      placeDemoOrder: (delivery) => {
+        const items = get().items;
+        const lines = validateCart(items, items.map(item=>item.product));
+        const order = makeDemoOrder(lines, delivery, `DEMO-${crypto.randomUUID()}`, new Date().toISOString());
+        set(state=>({demoOrders:[order,...state.demoOrders].slice(0,100),items:[]}));
+        return order;
+      },
+      cancelDemoOrder: (id) => set(state=>({demoOrders:state.demoOrders.map(order=>order.id===id?{...order,status:"cancelled"}:order)})),
       favoriteProduct: [],
       addItem: (product) =>
         set((state) => {
@@ -115,6 +129,7 @@ const useStore = create<StoreState>()(
     }),
     {
       name: "cart-store",
+      skipHydration: true,
     }
   )
 );

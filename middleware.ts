@@ -1,12 +1,8 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
+import { NextResponse, type NextMiddleware } from 'next/server';
+import { DEMO_MODE } from './lib/demo-mode';
 
-export default clerkMiddleware();
+const middleware: NextMiddleware = DEMO_MODE ? () => NextResponse.next() : clerkMiddleware();
+export default middleware;
 
-export const config = {
-  matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
-  ],
-};
+export const config = { matcher: ['/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)', '/(api|trpc)(.*)'] };

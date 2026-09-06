@@ -1,13 +1,13 @@
 "use client";
 import { BRANDS_QUERYResult, Category, Product } from "@/sanity.types";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Container from "./Container";
 import {Title} from "./Title";
 import CategoryList from "./shop/CategoryList";
 import { useSearchParams } from "next/navigation";
 import BrandList from "./shop/BrandList";
 import PriceList from "./shop/PriceList";
-import { client } from "@/sanity/lib/client";
+import { getCatalogProducts } from "@/lib/catalog-client";
 import { Loader2 } from "lucide-react";
 import NoProductAvailable from "./NoProductAvailable";
 import ProductCard from "./ProductCard";
@@ -29,7 +29,10 @@ const Shop = ({ categories, brands }: Props) => {
     brandParams || null
   );
   const [selectedPrice, setSelectedPrice] = useState<string | null>(null);
-  const fetchProducts = async () => {
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  useEffect(()=>{ const timer=setTimeout(()=>setDebouncedSearch(search),250); return ()=>clearTimeout(timer); },[search]);
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       let minPrice = 0;
@@ -39,48 +42,35 @@ const Shop = ({ categories, brands }: Props) => {
         minPrice = min;
         maxPrice = max;
       }
-      const query = `
-      *[_type == 'product' 
-        && (!defined($selectedCategory) || references(*[_type == "category" && slug.current == $selectedCategory]._id))
-        && (!defined($selectedBrand) || references(*[_type == "brand" && slug.current == $selectedBrand]._id))
-        && price >= $minPrice && price <= $maxPrice
-      ] 
-      | order(name asc) {
-        ...,"categories": categories[]->title
-      }
-    `;
-      const data = await client.fetch(
-        query,
-        { selectedCategory, selectedBrand, minPrice, maxPrice },
-        { next: { revalidate: 0 } }
-      );
+      const data = await getCatalogProducts({ category:selectedCategory, brand:selectedBrand, minPrice, maxPrice, search:debouncedSearch });
       setProducts(data);
     } catch (error) {
       console.log("Shop product fetching Error", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory, selectedBrand, selectedPrice, debouncedSearch]);
 
   useEffect(() => {
     fetchProducts();
-  }, [selectedCategory, selectedBrand, selectedPrice]);
+  }, [fetchProducts]);
   return (
     <div className="border-t">
-      <Container className="mt-5">
+      <Container className="mt-5"><label className="mb-6 block"><span className="mb-2 block text-sm font-medium">Search products</span><input id="catalog-search" type="search" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search by product name or description" className="w-full rounded-lg border px-4 py-3"/></label>
         <div className="sticky top-0 z-10 mb-5">
           <div className="flex items-center justify-between">
             <Title className="text-lg uppercase tracking-wide">
-              Get the products as your needs
+              Find your next favorite
             </Title>
             {(selectedCategory !== null ||
               selectedBrand !== null ||
-              selectedPrice !== null) && (
+              selectedPrice !== null || search !== "") && (
               <button
                 onClick={() => {
                   setSelectedCategory(null);
                   setSelectedBrand(null);
                   setSelectedPrice(null);
+                  setSearch("");
                 }}
                 className="text-shop-dark-green underline text-sm mt-2 font-medium hover:text-shop-orange hoverEffect"
               >
