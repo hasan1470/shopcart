@@ -2,6 +2,8 @@
 
 # Shopcart
 
+[**Open the live demo →**](https://shopcart-neon.vercel.app) · [Try checkout](https://shopcart-neon.vercel.app/shop)
+
 **A complete shopping demo: browse, add to cart, check out, and manage orders.**
 
 The public portfolio runs in demo mode. Visitors can use the full shopping flow without signing in or entering a payment card. The connected Clerk and Stripe integrations remain available for client handoff.
